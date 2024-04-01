@@ -1,51 +1,54 @@
 import { useState, useEffect } from "react";
 import service from "../services/file-upload.service"
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from "axios";
-
-const API_URL = "http://localhost:5005";
+import authService from "../services/auth.service";
 
 function ProfilePage() {
     const [profile, setProfile] = useState({});
-    const [imageUrl, setImageUrl] = useState("");
+    const [image, setImage] = useState("");
 
     const { userId } = useParams();
     const navigate = useNavigate();
 
-    const handleFileUpload = (e) => {
+    const handleFileUpload = async (e) => {
         // console.log("The file to be uploaded is: ", e.target.files[0]);
      
         const uploadData = new FormData();
      
-        // imageUrl => this name has to be the same as in the model since we pass
+        // image => this name has to be the same as in the model since we pass
         // req.body to .create() method when creating a new movie in '/api/movies' POST route
         uploadData.append("image", e.target.files[0]);
      
-        service
-          .uploadImage(uploadData)
-          .then(response => {
-            // console.log("response is: ", response);
-            // response carries "fileUrl" which we can use to update the state
-            setImageUrl(response.fileUrl);
-          })
-          .catch(err => console.log("Error while uploading the file: ", err));
+        try {
+          const response = await service.uploadImage(uploadData)
+          setImage(response.fileUrl);
+        } catch(err){
+          console.log("Error while uploading the file: ", err)
+        }
       };
 
-    useEffect(() => {
-        axios
-          .get(`${API_URL}/api/users/${userId}`)
-          .then((foundUser) => {
-            setProfile(foundUser.data);
-          })
-          .then(() => {
-            navigate(`/users/${userId}`);
-          })
+      useEffect(() => {
+        authService.getCurrentUser(userId)
+          .then((response) => setProfile(response.data))
           .catch((error) => console.log(error));
         
       }, [userId]);
 
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        // Create an object representing the request body
+        const requestBody = { image };
+    
+        // Make an axios request to the API
+        // If the POST request is successful, refresh the states and GamesListPage
+        // If the request resolves with an error, set the error message in the state
+        authService.editUser(userId, requestBody)
+          .then(() => navigate(`/users/${userId}`))
+      };
+
     return (
       <div>
+      <form onSubmit={handleSubmit}>
         <label>Username</label>
         <h3>{profile.username}</h3>
 
@@ -57,6 +60,9 @@ function ProfilePage() {
 
         <img src={profile.image} />
         <input type="file" onChange={(e) => handleFileUpload(e)} />
+        <br/>
+        <button type="submit">Update Profile</button>
+        </form>
       </div>
 
 

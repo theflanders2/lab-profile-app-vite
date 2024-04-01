@@ -47,7 +47,7 @@ router.get("/users/:userId", (req, res, next) => {
 /*-----POST IMAGE UPLOAD ROUTE-----*/
 // /api/upload => Route that receives the image, sends it
 // to Cloudinary via the fileUploader and returns the image URL
-router.post("/upload", fileUploader.single("imageUrl"), (req, res, next) => {
+router.post("/upload", fileUploader.single("image"), (req, res, next) => {
     console.log('req.file: information pertaining to uploaded image', req.file)
    
     if (!req.file) {
@@ -59,7 +59,7 @@ router.post("/upload", fileUploader.single("imageUrl"), (req, res, next) => {
     // 'fileUrl' can be any name, just make sure you remember
     // to use the same when accessing it on the frontend
     
-    res.json({ imageUrl: req.file.path });
+    res.json({ image: req.file.path });
   });
 
 module.exports = router;
